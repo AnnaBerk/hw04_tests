@@ -34,6 +34,9 @@ class GroupViewTests(TestCase):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
+    def get_first_object(self, response):
+        return response.context['page_obj'][0]
+
     def test_group_list_page_show_correct_context(self):
         """Пост group2 не попал на страницу записей group."""
         response = self.authorized_client.get(reverse(
@@ -81,7 +84,7 @@ class GroupViewTests(TestCase):
         response = self.guest_client.get(reverse(
             'posts:group_list', kwargs={'slug': 'slug'}
         ))
-        first_object = response.context['page_obj'][0]
+        first_object = self.get_first_object(response)
         self.assertEqual(
             first_object.author.username, self.post.author.username
         )
@@ -93,7 +96,7 @@ class GroupViewTests(TestCase):
         response = self.guest_client.get(reverse(
             'posts:profile', kwargs={'username': 'auth'}
         ))
-        first_object = response.context['page_obj'][0]
+        first_object = self.get_first_object(response)
         self.assertEqual(
             first_object.author.username, self.post.author.username
         )
