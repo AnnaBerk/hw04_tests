@@ -42,7 +42,7 @@ class GroupURLTests(TestCase):
                 self.assertTemplateUsed(response, template)
 
     def test_create_url_uses_correct_template(self):
-        """Страница /create/ использует шаблон /create_post.html"""
+        """Страница создания поста использует верный шаблон """
         response = self.authorized_client.get('/create/')
         self.assertTemplateUsed(response, 'posts/create_post.html')
 
@@ -60,13 +60,13 @@ class GroupURLTests(TestCase):
                 self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_create_url_exists_at_desired_location_authorized(self):
-        """Страница /create/ доступна авторизованному
+        """Страница создания поста доступна авторизованному
         пользователю."""
         response = self.authorized_client.get('/create/')
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_create_url_redirect_anonymous_on_admin_login(self):
-        """Страница по адресу /create/ перенаправит анонимного
+        """Страница создания поста перенаправит анонимного
         пользователя на страницу логина.
         """
         response = self.guest_client.get('/create/', follow=True)
@@ -74,17 +74,17 @@ class GroupURLTests(TestCase):
             response, ('/auth/login/?next=/create/'))
 
     def test_post_edit_url_exists_at_desired_location_authorized(self):
-        """Страница /post/post_id/edit доступна авторизованному
+        """Страница редактирования поста доступна авторизованному
         пользователю."""
         response = self.authorized_client.get(f'/posts/{self.post.id}/edit/')
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_post_edit_url_uses_correct_template(self):
-        """Страница /posts/post-edit использует шаблон /create_post.html"""
+        """Страница редактирования поста использует верный шаблон """
         response = self.authorized_client.get(f'/posts/{self.post.id}/edit/')
         self.assertTemplateUsed(response, 'posts/create_post.html')
 
     def test_unexisting_page_exists_at_desired_location(self):
-        """Страница /unexisting_page/ доступна любому пользователю."""
+        """Несуществующая страница доступна любому пользователю."""
         response = self.guest_client.get('/unexisting_page/')
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
