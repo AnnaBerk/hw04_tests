@@ -24,10 +24,12 @@ class PostCreateFormTests(TestCase):
         )
 
     def setUp(self):
+        self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
     def test_can_create_post(self):
+        """Авторизированный пользователь может создавать пост"""
         posts_count = Post.objects.count()
         form_data = {
             'text': 'Текст из формы',
@@ -49,6 +51,7 @@ class PostCreateFormTests(TestCase):
         )
 
     def test_can_edit_post(self):
+        """Авторизированный пользователь может редактировать пост"""
         posts_count = Post.objects.count()
         form_data = {
             'text': 'Текст из формы',
@@ -66,3 +69,18 @@ class PostCreateFormTests(TestCase):
         new_post = Post.objects.get(id='1')
         self.assertEqual(new_post.id, self.post.id)
         self.assertNotEqual(new_post.text, self.post.text)
+
+    def test_cant_create_post(self):
+        """Неавторизированный пользователь не может создавать пост"""
+        posts_count = Post.objects.count()
+        form_data = {
+            'text': 'Текст из формы',
+            'group.title': 'group',
+        }
+        response = self.guest_client.post(
+            reverse('posts:post_create'),
+            data=form_data,
+            follow=True,
+        )
+        self.assertRedirects(response, '/auth/login/?next=/create/')
+        self.assertEqual(Post.objects.count(), posts_count)
