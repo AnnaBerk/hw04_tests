@@ -30,6 +30,9 @@ class GroupURLTests(TestCase):
         self.create_url = '/create/'
         self.unexisting_url = '/unexisting/'
 
+    def get_login_page_url(self, url):
+        return f'/auth/login/?next={url}'
+
     def get_update_url(self, id):
         return f'/posts/{id}/edit/'
 
@@ -70,14 +73,6 @@ class GroupURLTests(TestCase):
         response = self.authorized_client.get(self.create_url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
-    def test_create_url_redirect_anonymous_on_admin_login(self):
-        """Страница создания поста перенаправит анонимного
-        пользователя на страницу логина.
-        """
-        response = self.guest_client.get(self.create_url, follow=True)
-        self.assertRedirects(
-            response, ('/auth/login/?next=/create/'))
-
     def test_post_edit_url_exists_at_desired_location_authorized(self):
         """Страница редактирования поста доступна авторизованному
         пользователю."""
@@ -97,3 +92,24 @@ class GroupURLTests(TestCase):
         """Несуществующая страница доступна любому пользователю."""
         response = self.guest_client.get(self.unexisting_url)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_create_url_redirect_anonymous_on_admin_login(self):
+        """Страница создания поста перенаправит анонимного
+        пользователя на страницу логина.
+        """
+        response = self.guest_client.get(self.create_url, follow=True)
+        self.assertRedirects(
+            response, self.get_login_page_url(self.create_url)
+        )
+
+    def test_post_edit_page_dont_exists_for_guest_client(self):
+        """Страница редактирования поста перенаправит анонимного
+        пользователя на страницу логина.
+        """
+        response = self.guest_client.get(
+            self.get_update_url(self.post.id)
+        )
+        self.assertRedirects(
+            response,
+            self.get_login_page_url(self.get_update_url(self.post.id))
+        )
