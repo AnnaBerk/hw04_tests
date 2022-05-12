@@ -131,6 +131,20 @@ class GroupViewTests(TestCase):
                     'form').fields.get(value)
                 self.assertIsInstance(form_field, expected)
 
+    def test_new_group_has_no_posts(self):
+        """В новой группе не было постов"""
+        form_data = {
+            'text': 'Текст из формы',
+            'group.title': 'newgroup',
+        }
+        self.authorized_client.post(
+            reverse('posts:post_create'),
+            data=form_data,
+            follow=True,
+        )
+        post_cnt = self.group.posts_group.all().count()
+        self.assertEqual(post_cnt, 1)
+
 
 class PaginatorViewsTest(TestCase):
     @classmethod
