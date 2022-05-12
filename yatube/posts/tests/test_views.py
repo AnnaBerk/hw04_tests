@@ -66,32 +66,34 @@ class GroupViewTests(TestCase):
                 response = self.authorized_client.get(reverse_name)
                 self.assertTemplateUsed(response, template)
 
-    def get_first_object(self, response):
-        return response.context['page_obj'][0]    
+    def get_first_object(self, response,):
+        return response.context['page_obj'][0]
 
-    def test_context(self, url, **kwargs):
-        response = self.guest_client.get(reverse(url, **kwargs))
-        first_object = self.get_first_object(response)
-        contexts = {
-            first_object.author.username: self.post.author.username,
-            first_object.text: self.post.text,
-            first_object.group.title: self.post.group.title
-        }
-        for obj_ctx, self_ctx in contexts.items():
-            with self.subTest():
-                self.assertEqual(obj_ctx, self_ctx)
+    def test_context(func):
+        def wrapper(self):
+            response = func(self)
+            first_object = self.get_first_object(response)
+            contexts = {
+                first_object.author.username: self.post.author.username,
+                first_object.text: self.post.text,
+                first_object.group.title: self.post.group.title
+            }
+            for obj_ctx, self_ctx in contexts.items():
+                with self.subTest():
+                    self.assertEqual(obj_ctx, self_ctx)
+        return wrapper
 
+    @test_context
     def test_index_page_show_correct_context(self):
         """Шаблон index сформирован с правильным контекстом."""
-        self.test_context('posts:index')
+        return self.guest_client.get(reverse('posts:index'))
 
+    @test_context
     def test_group_list_page_show_correct_context(self):
         """Шаблон group_list сформирован с правильным контекстом."""
-        self.test_context('posts:group_list', kwargs={'slug': 'slug'})
-
-    def test_profile_page_show_correct_context(self):
-        """Шаблон profile сформирован с правильным контекстом."""
-        self.test_context('posts:profile', kwargs={'username': 'auth'})
+        return self.guest_client.get(reverse(
+            'posts:group_list', kwargs={'slug': 'slug'})
+        )
 
     def test_post_detail_page_show_correct_context(self):
         """Шаблон post_detail сформирован с правильным контекстом."""
