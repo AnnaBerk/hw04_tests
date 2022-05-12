@@ -107,21 +107,12 @@ class GroupViewTests(TestCase):
         self.assertEqual(first_object.text, self.post.text)
         self.assertEqual(first_object.group.title, self.post.group.title)
 
-    def test_post_create_page_show_correct_context(self):
+    def test_post_create_and_edit_page_show_correct_context(self):
         """Шаблон post_create сформирован с правильным контекстом."""
-        response = self.authorized_client.get(reverse('posts:post_create'))
-        form_fields = {
-            'text': forms.fields.CharField,
-            'group': forms.fields.ChoiceField,
-        }
-        for value, expected in form_fields.items():
-            with self.subTest(value=value):
-                form_field = response.context.get('form').fields.get(value)
-                self.assertIsInstance(form_field, expected)
-
-    def test_post_edit_page_show_correct_context(self):
-        """Шаблон post_edit сформирован с правильным контекстом."""
-        response = self.authorized_client.get(
+        response_create_pg = self.authorized_client.get(
+            reverse('posts:post_create')
+        )
+        response_edit_pg = self.authorized_client.get(
             reverse('posts:post_edit', kwargs={'post_id': '1'})
         )
         form_fields = {
@@ -130,7 +121,14 @@ class GroupViewTests(TestCase):
         }
         for value, expected in form_fields.items():
             with self.subTest(value=value):
-                form_field = response.context.get('form').fields.get(value)
+                form_field = response_create_pg.context.get(
+                    'form').fields.get(value)
+                self.assertIsInstance(form_field, expected)
+
+        for value, expected in form_fields.items():
+            with self.subTest(value=value):
+                form_field = response_edit_pg.context.get(
+                    'form').fields.get(value)
                 self.assertIsInstance(form_field, expected)
 
 
