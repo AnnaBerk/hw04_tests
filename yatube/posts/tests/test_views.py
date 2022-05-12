@@ -34,9 +34,6 @@ class GroupViewTests(TestCase):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
-    def get_first_object(self, response):
-        return response.context['page_obj'][0]
-
     def test_group_list_page_show_correct_context(self):
         """Пост group2 не попал на страницу записей group."""
         response = self.authorized_client.get(reverse(
@@ -69,39 +66,32 @@ class GroupViewTests(TestCase):
                 response = self.authorized_client.get(reverse_name)
                 self.assertTemplateUsed(response, template)
 
+    def get_first_object(self, response):
+        return response.context['page_obj'][0]    
+
+    def test_context(self, url, **kwargs):
+        response = self.guest_client.get(reverse(url, **kwargs))
+        first_object = self.get_first_object(response)
+        contexts = {
+            first_object.author.username: self.post.author.username,
+            first_object.text: self.post.text,
+            first_object.group.title: self.post.group.title
+        }
+        for obj_ctx, self_ctx in contexts.items():
+            with self.subTest():
+                self.assertEqual(obj_ctx, self_ctx)
+
     def test_index_page_show_correct_context(self):
         """Шаблон index сформирован с правильным контекстом."""
-        response = self.guest_client.get(reverse('posts:index'))
-        first_object = response.context['page_obj'][0]
-        self.assertEqual(
-            first_object.author.username, self.post.author.username
-        )
-        self.assertEqual(first_object.text, self.post.text)
-        self.assertEqual(first_object.group.title, self.post.group.title)
+        self.test_context('posts:index')
 
     def test_group_list_page_show_correct_context(self):
         """Шаблон group_list сформирован с правильным контекстом."""
-        response = self.guest_client.get(reverse(
-            'posts:group_list', kwargs={'slug': 'slug'}
-        ))
-        first_object = self.get_first_object(response)
-        self.assertEqual(
-            first_object.author.username, self.post.author.username
-        )
-        self.assertEqual(first_object.text, self.post.text)
-        self.assertEqual(first_object.group.title, self.post.group.title)
+        self.test_context('posts:group_list', kwargs={'slug': 'slug'})
 
     def test_profile_page_show_correct_context(self):
         """Шаблон profile сформирован с правильным контекстом."""
-        response = self.guest_client.get(reverse(
-            'posts:profile', kwargs={'username': 'auth'}
-        ))
-        first_object = self.get_first_object(response)
-        self.assertEqual(
-            first_object.author.username, self.post.author.username
-        )
-        self.assertEqual(first_object.text, self.post.text)
-        self.assertEqual(first_object.group.title, self.post.group.title)
+        self.test_context('posts:profile', kwargs={'username': 'auth'})
 
     def test_post_detail_page_show_correct_context(self):
         """Шаблон post_detail сформирован с правильным контекстом."""
