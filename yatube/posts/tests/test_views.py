@@ -179,34 +179,19 @@ class PaginatorViewsTest(TestCase):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
-    def test_first_page_contains_ten_records(self):
-        response = self.client.get(reverse('posts:index'))
-        self.assertEqual(len(response.context['page_obj']), 10)
-
-    def test_second_page_contains_eight_records(self):
-        response = self.client.get(reverse('posts:index') + '?page=2')
-        self.assertEqual(len(response.context['page_obj']), 8)
-
-    def test_group_list_page_contains_ten_records(self):
-        response = self.client.get(reverse(
-            'posts:group_list', kwargs={'slug': 'slug'})
-        )
-        self.assertEqual(len(response.context['page_obj']), 10)
-
-    def test_group2_list_page_contains_five_records(self):
-        response = self.client.get(reverse(
-            'posts:group_list', kwargs={'slug': 'slug2'})
-        )
-        self.assertEqual(len(response.context['page_obj']), 5)
-
-    def test_first_page_profile_contains_ten_records(self):
-        response = self.client.get(reverse(
-            'posts:profile', kwargs={'username': 'auth'})
-        )
-        self.assertEqual(len(response.context['page_obj']), 10)
-
-    def test_second_page_profile_contains_eight_records(self):
-        response = self.client.get(reverse(
-            'posts:profile', kwargs={'username': 'auth'}) + '?page=2'
-        )
-        self.assertEqual(len(response.context['page_obj']), 8)
+    def test_paginator(self):
+        TEN_POSTS = 10
+        EIGHT_POSTS = 8
+        FIVE_POSTS = 5
+        urls_posts = {
+            '/': TEN_POSTS,
+            '/?page=2': EIGHT_POSTS,
+            '/group/slug/': TEN_POSTS,
+            '/group/slug2/': FIVE_POSTS,
+            '/profile/auth/': TEN_POSTS,
+            '/profile/auth/?page=2': EIGHT_POSTS,
+        }
+        for url, cnt in urls_posts.items():
+            with self.subTest(cnt=cnt):
+                response = self.client.get(url)
+                self.assertEqual(len(response.context['page_obj']), cnt)
