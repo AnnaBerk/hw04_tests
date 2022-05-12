@@ -106,7 +106,7 @@ class GroupViewTests(TestCase):
         ))
 
     def test_post_create_and_edit_page_show_correct_context(self):
-        """Шаблон post_create сформирован с правильным контекстом."""
+        """Шаблон post_create и edit сформированы с правильным контекстом."""
         response_create_pg = self.authorized_client.get(
             reverse('posts:post_create')
         )
@@ -122,9 +122,6 @@ class GroupViewTests(TestCase):
                 form_field = response_create_pg.context.get(
                     'form').fields.get(value)
                 self.assertIsInstance(form_field, expected)
-
-        for value, expected in form_fields.items():
-            with self.subTest(value=value):
                 form_field = response_edit_pg.context.get(
                     'form').fields.get(value)
                 self.assertIsInstance(form_field, expected)
