@@ -66,17 +66,20 @@ class GroupViewTests(TestCase):
                 response = self.authorized_client.get(reverse_name)
                 self.assertTemplateUsed(response, template)
 
-    def get_first_object(self, response,):
+    def get_object(self, response,):
+        res = response.context
+        if 'page_obj' not in res:
+            return response.context['post']
         return response.context['page_obj'][0]
 
     def test_context(func):
         def wrapper(self):
             response = func(self)
-            first_object = self.get_first_object(response)
+            object = self.get_object(response)
             contexts = {
-                first_object.author.username: self.post.author.username,
-                first_object.text: self.post.text,
-                first_object.group.title: self.post.group.title
+                object.author.username: self.post.author.username,
+                object.text: self.post.text,
+                object.group.title: self.post.group.title
             }
             for obj_ctx, self_ctx in contexts.items():
                 with self.subTest():
@@ -95,17 +98,12 @@ class GroupViewTests(TestCase):
             'posts:group_list', kwargs={'slug': 'slug'})
         )
 
+    @test_context
     def test_post_detail_page_show_correct_context(self):
         """Шаблон post_detail сформирован с правильным контекстом."""
-        response = self.guest_client.get(reverse(
+        return self.guest_client.get(reverse(
             'posts:post_detail', kwargs={'post_id': '1'}
         ))
-        first_object = response.context['post']
-        self.assertEqual(
-            first_object.author.username, self.post.author.username
-        )
-        self.assertEqual(first_object.text, self.post.text)
-        self.assertEqual(first_object.group.title, self.post.group.title)
 
     def test_post_create_and_edit_page_show_correct_context(self):
         """Шаблон post_create сформирован с правильным контекстом."""
