@@ -97,7 +97,7 @@ class PostCreateFormTests(TestCase):
         )
         self.assertRedirects(response, '/auth/login/?next=/create/')
         self.assertEqual(Post.objects.count(), posts_count)
-        
+
     def test_can_create_post_with_img(self):
         """Пост с картинкой добавляется в бд"""
         small_gif = (
@@ -133,4 +133,3 @@ class PostCreateFormTests(TestCase):
                 image='posts/small.gif',
             ).exists()
         )
-          
