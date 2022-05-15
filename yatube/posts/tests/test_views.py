@@ -1,14 +1,21 @@
-from django.test import TestCase, Client
+import shutil
+import tempfile
+
+from django.test import TestCase, Client, override_settings
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.conf import settings
 from django.urls import reverse
 from django import forms
 
 from ..models import Post, Group
 
+TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
+
 User = get_user_model()
 
 
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class GroupViewTests(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -44,10 +51,19 @@ class GroupViewTests(TestCase):
             image=cls.uploaded,
         )
 
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
+
     def setUp(self):
         self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(settings.MEDIA_ROOT)
 
     def test_group_list_page_show_correct_context(self):
         """Пост group2 не попал на страницу записей group."""
@@ -161,28 +177,28 @@ class PaginatorViewsTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create_user(username='auth')
-        cls.group = Group.objects.create(
-            title='group',
+        cls.user = User.objects.create_user(username='author')
+        cls.grouppag = Group.objects.create(
+            title='grouppag',
             description='Тестовое описание',
-            slug='slug',
+            slug='slugpag',
         )
-        cls.group2 = Group.objects.create(
-            title='group2',
+        cls.grouppag2 = Group.objects.create(
+            title='grouppag2',
             description='Тестовое описание2',
-            slug='slug2',
+            slug='slugpag2',
         )
         for _ in range(0, 13):
             cls.post = Post.objects.create(
                 author=cls.user,
                 text='Тестовый пост',
-                group=cls.group,
+                group=cls.grouppag,
             )
         for _ in range(0, 5):
             cls.post = Post.objects.create(
                 author=cls.user,
                 text='Тестовый пост',
-                group=cls.group2,
+                group=cls.grouppag2,
             )
 
     def setUp(self):
@@ -197,10 +213,10 @@ class PaginatorViewsTest(TestCase):
         urls_posts = {
             '/': TEN_POSTS,
             '/?page=2': EIGHT_POSTS,
-            '/group/slug/': TEN_POSTS,
-            '/group/slug2/': FIVE_POSTS,
-            '/profile/auth/': TEN_POSTS,
-            '/profile/auth/?page=2': EIGHT_POSTS,
+            '/group/slugpag/': TEN_POSTS,
+            '/group/slugpag2/': FIVE_POSTS,
+            '/profile/author/': TEN_POSTS,
+            '/profile/author/?page=2': EIGHT_POSTS,
         }
         for url, cnt in urls_posts.items():
             with self.subTest(cnt=cnt):
