@@ -1,11 +1,18 @@
+import shutil
+import tempfile
+
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
+from django.conf import settings
 
 from ..models import Group, Post
+
+TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 User = get_user_model()
 
 
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class PostModelTest(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -20,6 +27,11 @@ class PostModelTest(TestCase):
             author=cls.user,
             text='Тестовый пост больше 15 симовлов',
         )
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def test_group_have_correct_object_names(self):
         """Проверяем, что у моделей корректно работает __str__."""

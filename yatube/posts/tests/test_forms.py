@@ -30,7 +30,7 @@ class PostCreateFormTests(TestCase):
             text='Тестовый пост больше 15 симовлов',
             group=cls.group,
         )
-        
+
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()

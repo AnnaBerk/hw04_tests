@@ -1,12 +1,18 @@
-from django.test import TestCase, Client
+import shutil
+import tempfile
+
+from django.test import TestCase, Client, override_settings
 from django.contrib.auth import get_user_model
+from django.conf import settings
 
 from ..models import Post, Group
 
+TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 User = get_user_model()
 
 
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class PaginatorViewsTest(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -39,6 +45,11 @@ class PaginatorViewsTest(TestCase):
         self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def test_paginator(self):
         TEN_POSTS = 10
