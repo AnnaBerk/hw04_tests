@@ -6,8 +6,9 @@ from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth import get_user_model
 from django.conf import settings
+from http import HTTPStatus
 
-from ..models import Post, Group
+from ..models import Post, Group, Comment
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
@@ -133,3 +134,35 @@ class PostCreateFormTests(TestCase):
                 image='posts/small.gif',
             ).exists()
         )
+
+    def test_can_create_comment(self):
+        """Авторизированный пользователь может комментировать"""
+        comment_count = Comment.objects.count()
+        form_data = {
+            'text': 'Текст комментария',
+        }
+        response = self.authorized_client.post(
+            reverse('posts:add_comment', kwargs={'post_id': '1'}),
+            data=form_data,
+            follow=True,
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(Comment.objects.count(), comment_count + 1)
+        self.assertTrue(
+            Comment.objects.filter(
+                text='Текст комментария',
+            ).exists()
+        )
+
+    def test_cant_create_comment(self):
+        """Неавторизированный пользователь не может комментировать"""
+        comment_count = Comment.objects.count()
+        form_data = {
+            'text': 'Текст комментария',
+        }
+        self.guest_client.post(
+            reverse('posts:add_comment', kwargs={'post_id': '1'}),
+            data=form_data,
+            follow=True,
+        )
+        self.assertEqual(Comment.objects.count(), comment_count)
