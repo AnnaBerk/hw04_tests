@@ -1,7 +1,7 @@
 from django.shortcuts import redirect, render, get_object_or_404
 from django.core.paginator import Paginator
 from .models import Post, Group, User
-from .forms import PostForm
+from .forms import PostForm, CommentForm
 from django.contrib.auth.decorators import login_required
 
 
@@ -85,3 +85,19 @@ def post_edit(request, post_id):
         'post_id': post_id,
     }
     return render(request, 'posts/create_post.html', context)
+
+
+@login_required
+def add_comment(request, post_id):
+    form = CommentForm(request.POST or None)
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.author = request.user
+        comment.post = request.post
+        comment.save()
+        return redirect('posts:post_detail', post_id=post_id)
+    context = {
+        'form': form,
+        'comment': comment,
+    }
+    return render(request, 'posts/post_detail.html', context)

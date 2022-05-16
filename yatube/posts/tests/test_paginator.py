@@ -28,18 +28,20 @@ class PaginatorViewsTest(TestCase):
             description='Тестовое описание2',
             slug='slugpag2',
         )
-        for _ in range(0, 13):
-            cls.post = Post.objects.create(
+        POSTGR1 = 13
+        POSTGR2 = 5
+        Post.objects.bulk_create(
+            [Post(
                 author=cls.user,
                 text='Тестовый пост',
-                group=cls.grouppag,
-            )
-        for _ in range(0, 5):
-            cls.post = Post.objects.create(
+                group=cls.grouppag,) for _ in range(0, POSTGR1)]
+        )
+        Post.objects.bulk_create(
+            [Post(
                 author=cls.user,
                 text='Тестовый пост',
-                group=cls.grouppag2,
-            )
+                group=cls.grouppag2,) for _ in range(0, POSTGR2)]
+        )
 
     def setUp(self):
         self.guest_client = Client()
