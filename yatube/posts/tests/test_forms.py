@@ -42,51 +42,58 @@ class PostCreateFormTests(TestCase):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
+    def obj_counter_redirect(obj, count_arg):
+        """Проверяет добавился ли пост и сработал редирект"""
+        def decorator(func):
+            def wrapper(self):
+                countob = obj.objects.count()
+                response, path = func(self)
+                self.assertRedirects(response, path)
+                self.assertEqual(obj.objects.count(), countob + count_arg)
+            return wrapper
+        return decorator
+
+    @obj_counter_redirect(Post, 1)
     def test_can_create_post(self):
         """Авторизированный пользователь может создавать пост"""
-        posts_count = Post.objects.count()
-        form_data = {
+        data = {
             'text': 'Текст из формы',
             'group.title': 'group',
         }
         response = self.authorized_client.post(
             reverse('posts:post_create'),
-            data=form_data,
+            data=data,
             follow=True,
         )
-        self.assertRedirects(response, reverse(
-            'posts:profile', kwargs={'username': 'auth'})
-        )
-        self.assertEqual(Post.objects.count(), posts_count + 1)
+        path = reverse('posts:profile', kwargs={'username': 'auth'})
         self.assertTrue(
             Post.objects.filter(
                 text='Текст из формы',
             ).exists()
         )
+        return [response, path]
 
+    @obj_counter_redirect(Post, 0)
     def test_can_edit_post(self):
         """Авторизированный пользователь может редактировать пост"""
-        posts_count = Post.objects.count()
         form_data = {
             'text': 'Текст из формы',
-            'group.title': 'group',
         }
         response = self.authorized_client.post(
             reverse('posts:post_edit', kwargs={'post_id': '1'}),
             data=form_data,
             follow=True,
         )
-        self.assertRedirects(response, reverse(
+        path = reverse(
             'posts:post_detail', kwargs={'post_id': '1'})
-        )
-        self.assertEqual(Post.objects.count(), posts_count)
         new_post = Post.objects.get(id='1')
         self.assertEqual(new_post.id, self.post.id)
         self.assertNotEqual(new_post.text, self.post.text)
+        return [response, path]
 
+    @obj_counter_redirect(Post, 0)
     def test_cant_create_post(self):
         """Неавторизированный пользователь не может создавать пост"""
-        posts_count = Post.objects.count()
         form_data = {
             'text': 'Текст из формы',
             'group.title': 'group',
@@ -96,9 +103,9 @@ class PostCreateFormTests(TestCase):
             data=form_data,
             follow=True,
         )
-        self.assertRedirects(response, '/auth/login/?next=/create/')
-        self.assertEqual(Post.objects.count(), posts_count)
+        return [response, '/auth/login/?next=/create/']
 
+    @obj_counter_redirect(Post, 1)
     def test_can_create_post_with_img(self):
         """Пост с картинкой добавляется в бд"""
         small_gif = (
@@ -114,7 +121,6 @@ class PostCreateFormTests(TestCase):
             content=small_gif,
             content_type='image/gif',
         )
-        posts_count = Post.objects.count()
         form_data = {
             'text': 'Текст',
             'image': uploaded,
@@ -124,20 +130,19 @@ class PostCreateFormTests(TestCase):
             data=form_data,
             follow=True,
         )
-        self.assertRedirects(response, reverse(
+        path = reverse(
             'posts:profile', kwargs={'username': 'auth'})
-        )
-        self.assertEqual(Post.objects.count(), posts_count + 1)
         self.assertTrue(
             Post.objects.filter(
                 text='Текст',
                 image='posts/small.gif',
             ).exists()
         )
+        return [response, path]
 
+    @obj_counter_redirect(Comment, 1)
     def test_can_create_comment(self):
         """Авторизированный пользователь может комментировать"""
-        comment_count = Comment.objects.count()
         form_data = {
             'text': 'Текст комментария',
         }
@@ -146,23 +151,25 @@ class PostCreateFormTests(TestCase):
             data=form_data,
             follow=True,
         )
+        path = reverse(
+            'posts:post_detail', kwargs={'post_id': '1'})
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertEqual(Comment.objects.count(), comment_count + 1)
         self.assertTrue(
             Comment.objects.filter(
                 text='Текст комментария',
             ).exists()
         )
+        return [response, path]
 
+    @obj_counter_redirect(Comment, 0)
     def test_cant_create_comment(self):
         """Неавторизированный пользователь не может комментировать"""
-        comment_count = Comment.objects.count()
         form_data = {
             'text': 'Текст комментария',
         }
-        self.guest_client.post(
+        response = self.guest_client.post(
             reverse('posts:add_comment', kwargs={'post_id': '1'}),
             data=form_data,
             follow=True,
         )
-        self.assertEqual(Comment.objects.count(), comment_count)
+        return [response, '/auth/login/?next=/posts/1/comment/']
