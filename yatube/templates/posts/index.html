@@ -3,7 +3,7 @@
 {% block header1 %}Последние обновления на сайте{% endblock %}
 {% block content %}
   {% for post in page_obj %}
-  {% include 'includes/posts.html' %}
+    {% include 'includes/posts.html' %}
   {% endfor %}
   {% include 'includes/paginator.html' %}
 {% endblock %}
