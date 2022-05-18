@@ -35,7 +35,7 @@ class Post(models.Model):
         null=True,
         related_name='posts_group',
         verbose_name='Группа',
-        help_text='Группа, к которой будет относиться пост'
+        help_text='Группа, к которой будет относиться пост',
     )
     image = models.ImageField(
         'Картинка',
