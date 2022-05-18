@@ -5,6 +5,7 @@ from django.test import TestCase, Client, override_settings
 from django.contrib.auth import get_user_model
 from http import HTTPStatus
 from django.conf import settings
+from django.core.cache import cache
 
 from ..models import Post, Group
 
@@ -36,6 +37,7 @@ class GroupURLTests(TestCase):
         self.authorized_client.force_login(self.user)
         self.create_url = '/create/'
         self.unexisting_url = '/unexisting/'
+        cache.clear()
 
     @classmethod
     def tearDownClass(cls):

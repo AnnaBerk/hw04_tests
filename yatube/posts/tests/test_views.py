@@ -7,6 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.conf import settings
 from django.urls import reverse
 from django import forms
+from django.core.cache import cache
 
 from ..models import Post, Group
 
@@ -60,6 +61,7 @@ class GroupViewTests(TestCase):
         self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
+        cache.clear()
 
     def test_group_list_page_show_correct_context(self):
         """Пост group2 не попал на страницу записей group."""
