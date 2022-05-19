@@ -4,6 +4,7 @@ import tempfile
 from django.test import TestCase, Client, override_settings
 from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.core.cache import cache
 
 from ..models import Post, Group
 
@@ -47,6 +48,7 @@ class PaginatorViewsTest(TestCase):
         self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
+        cache.clear()
 
     @classmethod
     def tearDownClass(cls):
