@@ -1,11 +1,10 @@
-from functools import cache
+
 from django.shortcuts import redirect, render, get_object_or_404
 from django.core.paginator import Paginator
 from .models import Post, Group, User
 from .forms import PostForm, CommentForm
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_page
-from django.core.cache import cache
 
 
 def get_page_context(queryset, request):
@@ -13,6 +12,7 @@ def get_page_context(queryset, request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     return page_obj
+
 
 @cache_page(20, key_prefix='index_page')
 def index(request):
