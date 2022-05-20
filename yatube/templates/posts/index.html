@@ -2,6 +2,7 @@
 {% block title %}Последние обновления на сайте{% endblock %}
 {% block header1 %}Последние обновления на сайте{% endblock %}
 {% block content %}
+{% include 'includes/switcher.html' %}
   {% for post in page_obj %}
     {% include 'includes/posts.html' %}
   {% endfor %}
