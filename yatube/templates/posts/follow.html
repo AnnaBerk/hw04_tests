@@ -2,6 +2,10 @@
 {% block title %}Подписки{% endblock %}
 {% block header1 %}Посты по подписке{% endblock %}
 {% block content %}
+<h3>Всего постов: {{ page }}</h3>
+<p>
+  {{ authors }}
+</p>
   {% for post in page_obj %}
     {% include 'includes/posts.html' %}
   {% endfor %}

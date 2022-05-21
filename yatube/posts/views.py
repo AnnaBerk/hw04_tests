@@ -1,23 +1,22 @@
 
 from django.shortcuts import redirect, render, get_object_or_404
 from django.core.paginator import Paginator
-from .models import Post, Group, User
+from .models import Post, Group, Follow, User
 from .forms import PostForm, CommentForm
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_page
 
 
-def get_page_context(queryset, request):
+def get_page_context_paginator(queryset, request):
     paginator = Paginator(queryset, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     return page_obj
 
 
-@cache_page(20, key_prefix='index_page')
 def index(request):
     posts = Post.objects.all()
-    page_obj = get_page_context(posts, request)
+    page_obj = get_page_context_paginator(posts, request)
     context = {
         'page_obj': page_obj
     }
@@ -27,7 +26,7 @@ def index(request):
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
     posts = group.posts_group.all()
-    page_obj = get_page_context(posts, request)
+    page_obj = get_page_context_paginator(posts, request)
     context = {
         'group': group,
         'page_obj': page_obj,
@@ -37,7 +36,7 @@ def group_posts(request, slug):
 
 def profile(request, username):
     author = get_object_or_404(User, username=username)
-    page_obj = get_page_context(Post.objects.filter(author=author), request)
+    page_obj = get_page_context_paginator(Post.objects.filter(author=author), request)
     context = {
         'author': author,
         'page_obj': page_obj,
@@ -111,19 +110,32 @@ def add_comment(request, post_id):
 
 @login_required
 def follow_index(request):
-    # информация о текущем пользователе доступна в переменной request.user
-    # ...
-    context = {}
+    user = request.user
+    authors = user.follower.values_list('author', flat=True)
+    posts_list = Post.objects.filter(author__id__in=authors)
+    page_obj = get_page_context_paginator(posts_list, request)
+    context = {
+        'page_obj': page_obj,
+    }
     return render(request, 'posts/follow.html', context)
 
 
 @login_required
 def profile_follow(request, username):
     # Подписаться на автора
-    ...
-
+    author = User.objects.get(username=username)
+    user = request.user
+    if author != user:
+        Follow.objects.get_or_create(user=user, author=author)
+        return redirect(
+            'posts:profile',
+            username
+        )
+    return render(request, 'posts/follow.html')
 
 @login_required
 def profile_unfollow(request, username):
     # Дизлайк, отписка
-    ...
+    # user = request.user
+    # Follow.objects.get(user=user, author__username=username).delete()
+    return render(request, 'posts/follow.html')
