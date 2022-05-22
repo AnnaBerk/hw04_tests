@@ -9,7 +9,7 @@ from django.urls import reverse
 from django import forms
 from django.core.cache import cache
 
-from ..models import Post, Group
+from ..models import Post, Group, Follow
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
@@ -169,3 +169,27 @@ class GroupViewTests(TestCase):
         )
         post_cnt = self.group.posts_group.all().count()
         self.assertEqual(post_cnt, 1)
+
+    def test_auth_follow(self):
+        """ Авторизованный пользователь может подписываться на других
+            пользователей и удалять их из подписок.
+        """
+        following = User.objects.create(username='following')
+        self.authorized_client.post(
+            reverse('posts:profile_follow', kwargs={'username': following}),
+            follow=True,
+        )
+
+        self.assertIs(
+            Follow.objects.filter(user=self.user, author=following).exists(),
+            True
+        )
+
+        self.authorized_client.post(
+            reverse('posts:profile_unfollow', kwargs={'username': following}),
+            follow=True,
+        )
+        self.assertIs(
+            Follow.objects.filter(user=self.user, author=following).exists(),
+            False
+        )    
