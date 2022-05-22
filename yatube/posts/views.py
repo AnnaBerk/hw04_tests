@@ -4,7 +4,6 @@ from django.core.paginator import Paginator
 from .models import Post, Group, Follow, User
 from .forms import PostForm, CommentForm
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.cache import cache_page
 
 
 def get_page_context_paginator(queryset, request):
@@ -130,7 +129,7 @@ def follow_index(request):
 def profile_follow(request, username):
     author = User.objects.get(username=username)
     current_user = request.user
-    if author != user:
+    if author != current_user:
         Follow.objects.get_or_create(user=current_user, author=author)
         return redirect(
             'posts:profile',
