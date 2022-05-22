@@ -23,6 +23,6 @@
     {% for post in page_obj %}
       {% include 'includes/posts.html' %}
     {% endfor %}
+    {% include 'includes/paginator.html' %}
 </div> 
-  {% include 'includes/paginator.html' %}
 {% endblock %}

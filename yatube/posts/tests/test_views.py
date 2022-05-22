@@ -193,7 +193,7 @@ class GroupViewTests(TestCase):
             Follow.objects.filter(user=self.user, author=following).exists(),
             False
         )
-        
+
     def test_new_post(self):
         """ Новая запись пользователя появляется в ленте тех, кто на него
             подписан и не появляется в ленте тех, кто не подписан на него.

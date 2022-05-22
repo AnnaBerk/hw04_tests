@@ -115,8 +115,8 @@ def add_comment(request, post_id):
 
 @login_required
 def follow_index(request):
-    user = request.user
-    authors = user.follower.values_list('author', flat=True)
+    current_user = request.user
+    authors = current_user.follower.values_list('author', flat=True)
     posts_list = Post.objects.filter(author__id__in=authors)
     page_obj = get_page_context_paginator(posts_list, request)
     context = {
@@ -142,4 +142,7 @@ def profile_follow(request, username):
 def profile_unfollow(request, username):
     current_user = request.user
     Follow.objects.get(user=current_user, author__username=username).delete()
-    return render(request, 'posts/follow.html')
+    return redirect(
+        'posts:profile',
+        username
+    )
