@@ -192,4 +192,23 @@ class GroupViewTests(TestCase):
         self.assertIs(
             Follow.objects.filter(user=self.user, author=following).exists(),
             False
-        )    
+        )
+        
+    def test_new_post(self):
+        """ Новая запись пользователя появляется в ленте тех, кто на него
+            подписан и не появляется в ленте тех, кто не подписан на него.
+        """
+        following = User.objects.create(username='following')
+        Follow.objects.create(user=self.user, author=following)
+        post = Post.objects.create(author=following, text="новый пост")
+
+        response = self.authorized_client.get(
+            reverse('posts:profile_follow', kwargs={'username': following}),
+            follow=True,
+        )
+        self.assertIn(post.text, response.content.decode())
+        response = self.guest_client.get(
+            reverse('posts:profile_follow', kwargs={'username': following}),
+            follow=True,
+        )
+        self.assertNotIn(post.text, response.content.decode())
