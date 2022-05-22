@@ -36,10 +36,16 @@ def group_posts(request, slug):
 
 def profile(request, username):
     author = get_object_or_404(User, username=username)
-    page_obj = get_page_context_paginator(Post.objects.filter(author=author), request)
+    page_obj = get_page_context_paginator(
+        Post.objects.filter(author=author),
+        request
+    )
+    current_user = request.user
+    following = current_user.is_authenticated and author.following.exists()
     context = {
         'author': author,
         'page_obj': page_obj,
+        'following': following,
     }
     return render(request, 'posts/profile.html', context)
 
@@ -122,20 +128,19 @@ def follow_index(request):
 
 @login_required
 def profile_follow(request, username):
-    # Подписаться на автора
     author = User.objects.get(username=username)
-    user = request.user
+    current_user = request.user
     if author != user:
-        Follow.objects.get_or_create(user=user, author=author)
+        Follow.objects.get_or_create(user=current_user, author=author)
         return redirect(
             'posts:profile',
             username
         )
     return render(request, 'posts/follow.html')
 
+
 @login_required
 def profile_unfollow(request, username):
-    # Дизлайк, отписка
-    # user = request.user
-    # Follow.objects.get(user=user, author__username=username).delete()
+    current_user = request.user
+    Follow.objects.get(user=current_user, author__username=username).delete()
     return render(request, 'posts/follow.html')
